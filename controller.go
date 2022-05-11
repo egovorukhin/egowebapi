@@ -51,6 +51,7 @@ type Controller struct {
 	PathTree  []string
 	FileTree  []string
 	Tag       Tag
+	Model     interface{}
 }
 
 // SetName Устанавливаем имя контроллера
@@ -105,20 +106,20 @@ func (c *Controller) initialize(basePath string) {
 		t = value.Type()
 	}
 
-	pkg := strings.Replace(
+	pkgPath := strings.Replace(
 		regexp.MustCompile(`controllers(.*)$`).FindString(t.PkgPath()),
 		"controllers",
 		"",
 		-1,
 	)
 
-	// Путь указанный в ручную
-	if c.Path == "" {
-		c.Path = pkg
+	// Путь указанный вручную
+	if c.Path != "" {
+		pkgPath = c.Path
 	}
 
 	// Формирование дерева путей
-	c.FileTree = strings.Split(c.Path, "/")
+	c.FileTree = strings.Split(pkgPath, "/")
 	c.PathTree = c.FileTree
 	// Вставляем суффиксы по индексу пути
 	for _, item := range c.Suffix {
@@ -127,7 +128,7 @@ func (c *Controller) initialize(basePath string) {
 		}
 		c.PathTree = insert(c.FileTree, item.Index, item.Value)
 	}
-	c.Path = strings.Join(c.PathTree, "/")
+	pkgPath = strings.Join(c.PathTree, "/")
 
 	// Имя контроллера указанное в ручную
 	if c.Name == "" {
@@ -138,18 +139,27 @@ func (c *Controller) initialize(basePath string) {
 	// Формирование имени для тэга контроллера
 	var p string
 	name := c.Name
-	if c.Path != "" && c.Path != "/" && c.Path[:len(basePath)] == basePath {
-		index := len(c.Path)
-		loc := regexp.MustCompile(`{\w+}`).FindStringIndex(c.Path)
+	if pkgPath != "" && pkgPath != "/" && pkgPath[:len(basePath)] == basePath {
+		index := len(pkgPath)
+		loc := regexp.MustCompile(`{\w+}`).FindStringIndex(pkgPath)
 		if loc != nil {
 			index = loc[1]
 			name = ""
 		}
-		p = strings.ToLower(c.Path[len(basePath):index])
+		p = strings.ToLower(pkgPath[len(basePath):index])
 	}
 
 	c.Tag.Name = path.Join(p, name)
-	c.Path = path.Join(c.Path, c.Name)
+	if c.Path != "" {
+		c.Path = pkgPath
+	} else {
+		c.Path = path.Join(pkgPath, c.Name)
+	}
+}
+
+func (c *Controller) SetModel(model interface{}) *Controller {
+	c.Model = model
+	return c
 }
 
 func insert(a []string, index int, value string) []string {

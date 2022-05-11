@@ -1,6 +1,7 @@
 package egowebapi
 
 import (
+	"reflect"
 	"regexp"
 	"strings"
 )
@@ -18,6 +19,10 @@ type Parameter struct {
 	AllowEmptyValue  bool    `json:"allowEmptyValue,omitempty"`
 	Items            *Items  `json:"items,omitempty"`
 }
+
+const (
+	tagEWA = "ewa"
+)
 
 // NewPathParam Инициализация параметра in: path
 func NewPathParam(path string, desc ...string) *Parameter {
@@ -132,6 +137,90 @@ func NewFormDataParam(name, t string, required bool, desc ...string) *Parameter 
 		p.Description = desc[0]
 	}
 	return p
+}
+
+func ModelToParameters(v interface{}) (p []*Parameter) {
+
+	if v == nil {
+		return nil
+	}
+
+	Type := reflect.TypeOf(v)
+	if Type.Kind() != reflect.Struct {
+		return nil
+	}
+
+	for i := 0; i < Type.NumField(); i++ {
+		field := Type.Field(i)
+		if tag, ok := field.Tag.Lookup(tagEWA); ok {
+			var param *Parameter
+			for _, tagValue := range strings.Split(tag, ";") {
+
+				names := strings.Split(tagValue, ":")
+				if (len(names) == 0 || len(names) < 2) || names[1] == "" {
+					continue
+				}
+				t, f := setTypeFormat(reflect.Indirect(reflect.ValueOf(v)).Field(i).Interface())
+				name := strings.ToLower(strings.Trim(names[0], " "))
+				switch name {
+				case InHeader:
+					param = &Parameter{
+						Type:   t,
+						Format: f,
+						In:     name,
+					}
+				case InPath:
+					param = &Parameter{
+						Type:     t,
+						Format:   f,
+						In:       name,
+						Required: true,
+					}
+				case InQuery:
+					param = &Parameter{
+						Type:   t,
+						Format: f,
+						In:     name,
+					}
+				default:
+					continue
+				}
+
+				for _, value := range strings.Split(names[1], ",") {
+					items := strings.Split(value, "=")
+					if len(items) == 0 {
+						continue
+					}
+					item := strings.ToLower(strings.Trim(items[0], " "))
+					switch item {
+					case "required":
+						param.Required = true
+					case "empty":
+						param.AllowEmptyValue = true
+					}
+					if len(items) < 2 {
+						continue
+					}
+					switch item {
+					case "name":
+						param.Name = items[1]
+					case "format":
+						param.Format = items[1]
+					case "type":
+						param.Type = items[1]
+					case "desc":
+						param.Description = items[1]
+					default:
+						continue
+					}
+				}
+
+				p = append(p, param)
+			}
+		}
+	}
+
+	return
 }
 
 // NewParameter Инициализация параметра

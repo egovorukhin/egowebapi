@@ -12,7 +12,7 @@ import (
 
 const (
 	Name    = "EgoWebApi"
-	Version = "v0.2.23"
+	Version = "v0.2.24"
 )
 
 type Server struct {

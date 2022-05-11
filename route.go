@@ -12,6 +12,7 @@ type Route struct {
 	emptyPathParam *EmptyPathParam
 	session        SessionTurn
 	isPermission   bool
+	model          interface{}
 	Handler        Handler
 	Operation
 }
@@ -63,6 +64,11 @@ func (r *Route) SetParameters(params ...*Parameter) *Route {
 	for _, param := range params {
 		r.Parameters = append(r.Parameters, param)
 	}
+	return r
+}
+
+func (r *Route) NewParametersByModel() *Route {
+	r.SetParameters(ModelToParameters(r.model)...)
 	return r
 }
 
