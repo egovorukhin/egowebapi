@@ -1,7 +1,6 @@
 package gin
 
 import (
-	ewa "github.com/egovorukhin/egowebapi"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,11 +39,8 @@ func (s *Server) Use(params ...interface{}) {
 	}
 }
 
-func (s *Server) Add(method, path string, handler ewa.Handler) {
-	s.App.Handle(method, path, func(c *gin.Context) {
-		ctx := ewa.NewContext(&Context{Ctx: c})
-		_ = handler(ctx)
-	})
+func (s *Server) Add(method, path string, handler interface{}) {
+	s.App.Handle(method, path, handler.(gin.HandlerFunc))
 }
 
 func (s *Server) GetApp() interface{} {

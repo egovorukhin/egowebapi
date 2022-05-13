@@ -1,10 +1,11 @@
 package egowebapi
 
 import (
+	"errors"
 	"fmt"
 	"github.com/egovorukhin/egowebapi/consts"
 	"github.com/egovorukhin/egowebapi/security"
-	"github.com/invopop/jsonschema"
+	"github.com/mustan989/jsonschema"
 	p "path"
 	"regexp"
 	"strings"
@@ -20,7 +21,7 @@ type Server struct {
 	IsStarted   bool
 	WebServer   IServer
 	Controllers []*Controller
-	Swagger     *Swagger
+	Swagger     Swagger
 }
 
 type IServer interface {
@@ -30,7 +31,7 @@ type IServer interface {
 	Static(prefix, root string)
 	Any(path string, handler interface{})
 	Use(params ...interface{})
-	Add(method, path string, handler Handler)
+	Add(method, path string, handler interface{})
 	GetApp() interface{}
 	NotFoundPage(path, page string)
 	ConvertParam(param string) string
@@ -64,7 +65,7 @@ func New(server IServer, config Config) *Server {
 	s := &Server{
 		Config:    config,
 		WebServer: server,
-		Swagger: &Swagger{
+		Swagger: Swagger{
 			Swagger:             "2.0",
 			Host:                fmt.Sprintf("localhost:%d", config.Port),
 			BasePath:            "/",
@@ -73,6 +74,9 @@ func New(server IServer, config Config) *Server {
 			Definitions:         map[string]*jsonschema.Schema{},
 		},
 	}
+
+	// Глобальная переменная для указания ссылки на объект
+	jsonschema.SetReferencePrefix(RefDefinitions)
 
 	return s
 }
@@ -84,6 +88,10 @@ func (s *Server) GetWebServer() interface{} {
 
 // Start запуск сервера
 func (s *Server) Start() (err error) {
+
+	if s.Config.ContextHandler == nil {
+		return errors.New("Specify the handler - ContextHandler")
+	}
 
 	for _, c := range s.Controllers {
 
@@ -181,7 +189,7 @@ func (s *Server) Stop() error {
 }
 
 // Устанавливаем глобальные настройки для маршрутов
-func (s *Server) newRoute() *Route {
+func (s *Server) newRoute(model *Model) *Route {
 
 	route := &Route{
 		Operation: Operation{
@@ -195,6 +203,15 @@ func (s *Server) newRoute() *Route {
 				},
 			},
 		},
+		Model: model,
+	}
+	if model != nil {
+		if model.Parameter != nil {
+			s.Swagger.setDefinition(model.Parameter)
+		}
+		if model.Response != nil {
+			s.Swagger.setDefinition(model.Response)
+		}
 	}
 	if s.Config.Permission != nil {
 		route.isPermission = s.Config.Permission.AllRoutes
@@ -208,63 +225,63 @@ func (s *Server) newRoute() *Route {
 
 // Обрабатываем метод GET
 func (s *Server) get(i IGet, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Get(route)
 	return s.add(consts.MethodGet, c, route)
 }
 
 // Обрабатываем метод POST
 func (s *Server) post(i IPost, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Post(route)
 	return s.add(consts.MethodPost, c, route)
 }
 
 // Обрабатываем метод PUT
 func (s *Server) put(i IPut, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Put(route)
 	return s.add(consts.MethodPut, c, route)
 }
 
 // Обрабатываем метод DELETE
 func (s *Server) delete(i IDelete, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Delete(route)
 	return s.add(consts.MethodDelete, c, route)
 }
 
 // Обрабатываем метод OPTIONS
 func (s *Server) options(i IOptions, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Options(route)
 	return s.add(consts.MethodOptions, c, route)
 }
 
 // Обрабатываем метод PATCH
 func (s *Server) patch(i IPatch, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Patch(route)
 	return s.add(consts.MethodPatch, c, route)
 }
 
 // Обрабатываем метод HEAD
 func (s *Server) head(i IHead, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Head(route)
 	return s.add(consts.MethodHead, c, route)
 }
 
 // Обрабатываем метод CONNECT
 func (s *Server) connect(i IConnect, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Connect(route)
 	return s.add(consts.MethodConnect, c, route)
 }
 
 // Обрабатываем метод TRACE
 func (s *Server) trace(i ITrace, c *Controller) error {
-	route := s.newRoute()
+	route := s.newRoute(c.Model)
 	i.Trace(route)
 	return s.add(consts.MethodTrace, c, route)
 }
@@ -302,7 +319,7 @@ func (s *Server) add(method string, c *Controller, route *Route) error {
 	route.Operation.addTag(c.Tag.Name)
 
 	// Получаем handler маршрута
-	h := route.getHandler(s.Config, nil, *s.Swagger)
+	h := s.Config.ContextHandler(route.getHandler(s.Config, s.Swagger))
 
 	// Перебираем параметры адресной строки
 	for _, param := range params {
@@ -317,7 +334,10 @@ func (s *Server) add(method string, c *Controller, route *Route) error {
 			operation := route.Operation
 			// Если пустой путь, то применяем некоторые настройки из основного
 			if param == "" && route.emptyPathParam != nil {
-				operation.ID = ""
+				operation.Responses = make(map[string]Response)
+				for key, value := range route.Responses {
+					operation.Responses[key] = value
+				}
 				for key, value := range route.emptyPathParam.Responses {
 					operation.Responses[key] = value
 				}
@@ -328,9 +348,7 @@ func (s *Server) add(method string, c *Controller, route *Route) error {
 
 			lowerMethod := strings.ToLower(method)
 			// Установка ID операции
-			if route.Operation.ID == "" {
-				route.SetOperationID(lowerMethod + strings.ReplaceAll(fullPath[l:], "/", "-"))
-			}
+			operation.ID = lowerMethod + strings.ReplaceAll(fullPath[l:], "/", "-")
 
 			// Добавляем пути и методы в swagger
 			s.Swagger.setPath(fullPath[l:], lowerMethod, operation)

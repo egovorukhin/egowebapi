@@ -1,10 +1,5 @@
 package gin
 
-import (
-	"mime/multipart"
-	"net/url"
-)
-
 /*type Context struct {
 	Ctx *gin.Context
 }
@@ -99,7 +94,7 @@ func (c *Context) Body() []byte {
 	b, _ := ioutil.ReadAll(body)
 	defer body.Close()
 	return b
-}*/
+}
 
 func (c *Context) BodyParser(out interface{}) error {
 	return c.Ctx.Bind(out)
@@ -146,3 +141,4 @@ func (c *Context) Scheme() string {
 func (c *Context) MultipartForm() (*multipart.Form, error) {
 	return c.Ctx.MultipartForm()
 }
+*/

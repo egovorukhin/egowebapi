@@ -1,27 +1,17 @@
 package main
 
 import (
-	"errors"
 	"fmt"
-	ewa "github.com/egovorukhin/egowebapi"
-	"github.com/egovorukhin/egowebapi/example/fiber/controllers/web"
-	"github.com/egovorukhin/egowebapi/example/fiber/src/storage"
-	f "github.com/egovorukhin/egowebapi/fiber"
-	"github.com/egovorukhin/egowebapi/security"
-	"github.com/egovorukhin/egowebapi/session"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/favicon"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 )
 
 func main() {
 
 	//BasicAuth
-	basicAuthHandler := func(user string, pass string) bool {
+	/*basicAuthHandler := func(user string, pass string) bool {
 		if user == "user" && pass == "Qq123456" {
 			return true
 		}
@@ -48,31 +38,32 @@ func main() {
 		}
 		return false
 	}
+	contextHandler := func(handler ewa.Handler) interface{} {
+		return func(ctx *fiber.Ctx) error {
+			return handler(ewa.NewContext(&fewa.Context{Ctx: ctx}))
+		}
+	}*/
 
-	root := "./views"
+	//root := "./views"
 
 	// Fiber
 	app := fiber.New(fiber.Config{
-		Views: f.NewViews(root, f.Html, &f.Engine{
-			Reload: true,
-		}),
+		//Views: html.New("/", ".html"),
 	})
-	app.Use(favicon.New(favicon.Config{
+	app.Static("/views", "dist")
+	app.Add(fiber.MethodGet, "/", func(ctx *fiber.Ctx) error {
+		return ctx.SendFile("./dist/index.html")
+	})
+	/*	app.Use(favicon.New(favicon.Config{
 		File: "./views/favicon.ico",
-	}))
-	app.Use(cors.New())
-	server := &f.Server{App: app}
+	}))*/
+	//app.Use(cors.New())
+	app.Listen(":3005")
+
+	/*server := &fewa.Server{App: app}
 	// Конфиг
 	cfg := ewa.Config{
 		Port: 3005,
-		Static: &ewa.Static{
-			Prefix: "/",
-			Root:   root,
-		},
-		Views: &ewa.Views{
-			Root:   root,
-			Engine: f.Html,
-		},
 		Authorization: security.Authorization{
 			Basic: &security.Basic{
 				Handler: basicAuthHandler,
@@ -86,18 +77,15 @@ func main() {
 		Permission: &ewa.Permission{
 			Handler: checkPermission,
 		},
-		ErrorHandler: errorHandler,
+		ErrorHandler:   errorHandler,
+		ContextHandler: contextHandler,
 	}
-	// Указываем суффиксы
-	/*suffix := ewa.NewSuffix(
-		ewa.Suffix{Index: 2, Value: ":system"},
-		ewa.Suffix{Index: 3, Value: ":version"},
-	)*/
+
 	//Инициализируем сервер
 	ws := ewa.New(server, cfg)
-	//ws.Register(new(web.Home)).SetPath("/")
-	ws.Register(new(web.Login)).SetPath("/")
-	ws.Register(new(web.Logout)).SetPath("/")
+	ws.Register(new(web.Index))
+	ws.Register(new(web.Auth)).SetPath("/login")
+	ws.Register(new(web.Logout)).SetPath("/logout")
 
 	// Канал для получения ошибки, если таковая будет
 	errChan := make(chan error, 2)
@@ -109,7 +97,7 @@ func main() {
 	go getSignal(errChan)
 
 	fmt.Println("Старт приложения")
-	fmt.Printf("Остановка приложения. %s", <-errChan)
+	fmt.Printf("Остановка приложения. %s", <-errChan)*/
 
 }
 

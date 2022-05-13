@@ -7,15 +7,16 @@ import (
 )
 
 type Config struct {
-	Port          int
-	Secure        *Secure
-	Authorization security.Authorization
-	Session       *session.Config
-	Permission    *Permission
-	Static        *Static
-	NotFoundPage  string
-	Views         *Views
-	ErrorHandler  ErrorHandler
+	Port           int
+	Secure         *Secure
+	Authorization  security.Authorization
+	Session        *session.Config
+	Permission     *Permission
+	Static         *Static
+	NotFoundPage   string
+	Views          *Views
+	ContextHandler ContextHandler
+	ErrorHandler   ErrorHandler
 }
 
 type Views struct {
@@ -34,6 +35,11 @@ type Secure struct {
 	Key  string
 	Cert string
 }
+
+type Handler func(c *Context) error
+type ContextHandler func(handler Handler) interface{}
+type PermissionHandler func(username string, path string) bool
+type ErrorHandler func(c *Context, statusCode int, err interface{}) error
 
 func (s *Secure) Get() (cert string, key string) {
 	key = filepath.Join(s.Path, s.Key)

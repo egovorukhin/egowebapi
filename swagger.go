@@ -3,27 +3,27 @@ package egowebapi
 import (
 	"encoding/json"
 	"github.com/egovorukhin/egowebapi/security"
-	"github.com/invopop/jsonschema"
+	"github.com/mustan989/jsonschema"
 )
 
 type Swagger struct {
-	ID                  string               `json:"id,omitempty"`
-	Consumes            []string             `json:"consumes,omitempty"`
-	Produces            []string             `json:"produces,omitempty"`
-	Schemes             []string             `json:"schemes,omitempty"`
-	Swagger             string               `json:"swagger,omitempty"`
-	Info                *Info                `json:"info,omitempty"`
-	Host                string               `json:"host,omitempty"`
-	BasePath            string               `json:"basePath,omitempty"`
-	Paths               Paths                `json:"paths,omitempty"`
-	Parameters          map[string]Parameter `json:"parameters,omitempty"`
-	Responses           map[string]Response  `json:"responses,omitempty"`
-	SecurityDefinitions SecurityDefinitions  `json:"securityDefinitions,omitempty"`
-	Security            Security             `json:"security,omitempty"`
-	Tags                []Tag                `json:"tags,omitempty"`
-	ExternalDocs        *ExternalDocs        `json:"externalDocs,omitempty"`
+	ID                  string                 `json:"id,omitempty"`
+	Consumes            []string               `json:"consumes,omitempty"`
+	Produces            []string               `json:"produces,omitempty"`
+	Schemes             []string               `json:"schemes,omitempty"`
+	Swagger             string                 `json:"swagger,omitempty"`
+	Info                *Info                  `json:"info,omitempty"`
+	Host                string                 `json:"host,omitempty"`
+	BasePath            string                 `json:"basePath,omitempty"`
+	Paths               Paths                  `json:"paths,omitempty"`
+	Parameters          map[string]Parameter   `json:"parameters,omitempty"`
+	Responses           map[string]Response    `json:"responses,omitempty"`
+	SecurityDefinitions SecurityDefinitions    `json:"securityDefinitions,omitempty"`
+	Security            Security               `json:"security,omitempty"`
+	Tags                []Tag                  `json:"tags,omitempty"`
+	ExternalDocs        *ExternalDocs          `json:"externalDocs,omitempty"`
+	Definitions         jsonschema.Definitions `json:"definitions,omitempty"`
 	//spec.Swagger
-	Definitions jsonschema.Definitions `json:"definitions,omitempty"`
 }
 
 type Info struct {
@@ -92,13 +92,9 @@ const (
 	TypeInteger = "integer"
 	TypeObject  = "object"
 	TypeBoolean = "boolean"
-)
 
-const (
 	CollectionFormatMulti = "multi"
-)
 
-const (
 	RefDefinitions = "#/definitions/"
 )
 
@@ -106,13 +102,19 @@ func (s *Swagger) JSON() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-// SetDefinitions Преобразование моделей в формат JSON Schema
-func (s *Swagger) SetDefinitions(models ...interface{}) *Swagger {
+// setDefinitions Преобразование моделей в формат JSON Schema
+func (s *Swagger) setDefinitions(models ...interface{}) *Swagger {
 	for _, model := range models {
-		schema := jsonschema.Reflect(model)
-		for key, value := range schema.Definitions {
-			s.Definitions[key] = value
-		}
+		s.setDefinition(model)
+	}
+	return s
+}
+
+// setDefinitions Преобразование моделей в формат JSON Schema
+func (s *Swagger) setDefinition(model interface{}) *Swagger {
+	schema := jsonschema.Reflect(model)
+	for key, value := range schema.Definitions {
+		s.Definitions[key] = value
 	}
 	return s
 }
@@ -176,44 +178,6 @@ func (s *Swagger) setPath(path, method string, operation Operation) *Swagger {
 	s.Paths[path][method] = operation
 	return s
 }
-
-/*func (p *PathItem) setOperation(method string, operation *Operation) {
-	switch method {
-	case MethodGet:
-		p.Get = operation
-		break
-	case MethodPost:
-		p.Post = operation
-		break
-	case MethodPut:
-		p.Put = operation
-		break
-	case MethodDelete:
-		p.Delete = operation
-		break
-	case MethodOptions:
-		p.Options = operation
-		break
-	case MethodPatch:
-		p.Patch = operation
-		break
-	case MethodHead:
-		p.Head = operation
-		break
-	case MethodTrace:
-		p.Trace = operation
-		break
-	case MethodConnect:
-		p.Connect = operation
-		break
-	}
-}
-
-func (p PathItem) MarshalJSON() ([]byte, error) {
-	m := map[string]Operation{}
-
-	return json.Marshal(m)
-}*/
 
 // setSecurityDefinition Устанавливаем необходимые поля для определения авторизации
 func (s *Swagger) setSecurityDefinition(authName string, sec security.Definition) *Swagger {

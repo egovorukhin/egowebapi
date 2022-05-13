@@ -1,7 +1,6 @@
 package fiber
 
 import (
-	ewa "github.com/egovorukhin/egowebapi"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -36,10 +35,8 @@ func (s *Server) Use(params ...interface{}) {
 	s.App.Use(params)
 }
 
-func (s *Server) Add(method, path string, handler ewa.Handler) {
-	s.App.Add(method, path, func(ctx *fiber.Ctx) error {
-		return handler(ewa.NewContext(&Context{Ctx: ctx}))
-	})
+func (s *Server) Add(method, path string, handler interface{}) {
+	s.App.Add(method, path, handler.(fiber.Handler))
 }
 
 func (s *Server) GetApp() interface{} {

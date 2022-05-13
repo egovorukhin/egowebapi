@@ -4,10 +4,11 @@ go 1.17
 
 require (
 	github.com/gin-gonic/gin v1.7.7
-	github.com/gofiber/fiber/v2 v2.31.0
-	github.com/gofiber/template v1.6.26
+	github.com/gofiber/fiber/v2 v2.33.0
+	github.com/gofiber/template v1.6.27
 	github.com/invopop/jsonschema v0.4.0
-	github.com/labstack/echo/v4 v4.7.0
+	github.com/labstack/echo/v4 v4.7.2
+	github.com/mustan989/jsonschema v0.4.1
 )
 
 require (
@@ -36,7 +37,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/ugorji/go/codec v1.1.7 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	github.com/valyala/fasthttp v1.34.0 // indirect
+	github.com/valyala/fasthttp v1.35.0 // indirect
 	github.com/valyala/fasttemplate v1.2.1 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	github.com/yosssi/ace v0.0.5 // indirect

@@ -2,7 +2,6 @@ package echo
 
 import (
 	"context"
-	ewa "github.com/egovorukhin/egowebapi"
 	"github.com/labstack/echo/v4"
 )
 
@@ -40,11 +39,8 @@ func (s *Server) Use(params ...interface{}) {
 	}
 }
 
-func (s *Server) Add(method, path string, handler ewa.Handler) {
-	s.App.Add(method, path, func(c echo.Context) error {
-		ctx := ewa.NewContext(&Context{Ctx: c})
-		return handler(ctx)
-	})
+func (s *Server) Add(method, path string, handler interface{}) {
+	s.App.Add(method, path, handler.(echo.HandlerFunc))
 }
 
 func (s *Server) GetApp() interface{} {

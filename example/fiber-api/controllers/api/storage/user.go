@@ -5,21 +5,21 @@ import (
 	"github.com/egovorukhin/egowebapi/example/fiber-api/models"
 	"github.com/egovorukhin/egowebapi/security"
 	"strconv"
+	"time"
 )
 
 type User struct{}
 
 func (User) Get(route *ewa.Route) {
-	route.SetSecurity(security.BasicAuth)
-	route.SetEmptyParam(
-		ewa.NewEmptyPathParam("Get users").
-			SetResponse(200, ewa.NewResponse(ewa.NewSchemaArray(models.User{}), "Return array users")),
-	)
-	route.SetParameters(
-		ewa.NewPathParam("/{id}", "ID users").SetType(ewa.TypeInteger),
-		ewa.NewQueryParam("id", false, "ID users"),
-		ewa.NewQueryArrayParam("firstname", "User1, User2, User3", false, "Name users"),
-	)
+
+	route.SetSecurity(security.BasicAuth).
+		SetEmptyParam(ewa.NewEmptyPathParam("Get users").SetResponse(200, ewa.NewResponse(ewa.NewSchemaArray(route.ParameterModel()), "Return array users"))).
+		SetParameters(ewa.NewPathParam("/{id}", "Id пользователя")).
+		InitParametersByModel().
+		SetSummary("Get user")
+	route.SetResponse(422, ewa.NewResponse(nil, "Return parse parameter error")).
+		SetResponse(200, ewa.NewResponse(ewa.NewSchema(route.ParameterModel()), "Return user struct"))
+
 	route.Handler = func(c *ewa.Context) error {
 		id, err := strconv.Atoi(c.Params("id", "0"))
 		if err != nil {
@@ -32,15 +32,11 @@ func (User) Get(route *ewa.Route) {
 		users := models.GetUsers()
 		return c.JSON(200, users)
 	}
-	route.SetSummary("Get user")
-	route.SetDefaultResponse(ewa.NewResponse(ewa.NewSchema(models.User{})).AddHeader("Login", ewa.NewHeader("", false, "User login")))
-	route.SetResponse(422, ewa.NewResponse(nil, "Return parse parameter error"))
-	route.SetResponse(200, ewa.NewResponse(ewa.NewSchema(models.User{}), "Return user struct"))
 }
 
 func (User) Post(route *ewa.Route) {
 	route.SetSecurity(security.BasicAuth)
-	route.SetParameters(ewa.NewBodyParam(true, ewa.NewSchema(models.User{}), "Must have request body"))
+	route.SetParameters(ewa.NewBodyParam(true, ewa.NewSchema(route.ParameterModel()), "Must have request body"))
 	route.SetSummary("Create user")
 	route.Handler = func(c *ewa.Context) error {
 		user := models.User{}
@@ -49,8 +45,13 @@ func (User) Post(route *ewa.Route) {
 			return c.SendString(400, err.Error())
 		}
 		user.Set()
-		return c.SendString(200, "OK")
+		return c.JSON(200, models.Response{
+			Id:       user.Id,
+			Message:  "Created",
+			Datetime: time.Now(),
+		})
 	}
+	route.SetResponse(200, ewa.NewResponse(ewa.NewSchema(route.ResponseModel()), "OK"))
 	route.SetResponse(400, ewa.NewResponse(nil, "Parse body error"))
 }
 
@@ -58,7 +59,7 @@ func (User) Put(route *ewa.Route) {
 	route.SetSecurity(security.BasicAuth)
 	route.SetParameters(
 		ewa.NewQueryParam("id", false, "id user"),
-		ewa.NewBodyParam(true, ewa.NewSchema(models.User{}), "Must have request body"),
+		ewa.NewBodyParam(true, ewa.NewSchema(route.ParameterModel()), "Must have request body"),
 	)
 	route.SetSummary("Update user")
 	route.Handler = func(c *ewa.Context) error {
@@ -80,6 +81,7 @@ func (User) Put(route *ewa.Route) {
 	}
 	route.SetResponse(400, ewa.NewResponse(nil, "Parse body error"))
 	route.SetResponse(422, ewa.NewResponse(nil, "Return query error"))
+	route.SetResponse(200, ewa.NewResponse(ewa.NewSchema(route.ResponseModel()), "OK"))
 }
 
 func (User) Delete(route *ewa.Route) {
@@ -98,4 +100,5 @@ func (User) Delete(route *ewa.Route) {
 		return c.SendString(200, "OK")
 	}
 	route.SetResponse(422, ewa.NewResponse(nil, "Return parse parameter error"))
+	route.SetResponse(200, ewa.NewResponse(ewa.NewSchema(route.ResponseModel()), "OK"))
 }

@@ -85,6 +85,9 @@ type Items struct {
 
 // NewSchema Инициализация схемы для параметров
 func NewSchema(i interface{}) *Schema {
+	if i == nil {
+		return nil
+	}
 	return &Schema{
 		Ref: RefDefinition(i),
 	}
@@ -92,6 +95,9 @@ func NewSchema(i interface{}) *Schema {
 
 // NewSchemaArray Инициализация схемы с массивом для параметров
 func NewSchemaArray(i interface{}) *Schema {
+	if i == nil {
+		return nil
+	}
 	return &Schema{
 		Type: TypeArray,
 		Items: &Items{
@@ -185,33 +191,33 @@ func NewHeader(t interface{}, nullable bool, desc ...string) Header {
 func setTypeFormat(t interface{}) (Type string, Format string) {
 
 	switch t.(type) {
-	case string:
+	case string, *string:
 		Type = TypeString
 		break
-	case int:
+	case int, *int:
 		Type = TypeInteger
 		break
-	case int8:
+	case int8, *int8:
 		Type = TypeInteger
 		Format = "int8"
 		break
-	case int16:
+	case int16, *int16:
 		Type = TypeInteger
 		Format = "int16"
 		break
-	case int32:
+	case int32, *int32:
 		Type = TypeInteger
 		Format = "int32"
 		break
-	case int64:
+	case int64, *int64:
 		Type = TypeInteger
 		Format = "int64"
 		break
-	case time.Time:
+	case time.Time, *time.Time:
 		Type = TypeString
 		Format = "date-time"
 		break
-	case bool:
+	case bool, *bool:
 		Type = TypeBoolean
 		break
 	}

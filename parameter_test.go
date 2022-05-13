@@ -68,12 +68,13 @@ func TestParameter_SetTypeFormat(t *testing.T) {
 
 func TestModelToParameters(t *testing.T) {
 	type User struct {
-		Id          int       `ewa:"path:name=id;header:name=id,desc=заголовок"`
-		Pid         int64     `ewa:"header:name=pid"`
-		Firstname   string    `ewa:"query:name=firstname,required"`
-		Lastname    string    `ewa:"query:name=lastname, empty"`
-		Datetime    time.Time `ewa:"query:name=datetime"`
-		Description string    `ewa:"desc"`
+		Id          int        `ewa:"path:/{id};header:name=id,desc=заголовок"`
+		Pid         int64      `ewa:"header:name=pid"`
+		Firstname   string     `ewa:"query:name=firstname,required"`
+		Lastname    string     `ewa:"query:name=lastname, empty"`
+		Datetime    *time.Time `ewa:"query:name=datetime"`
+		List        string     `ewa:"query:name=list,array=item_1&item_2&item_3&item_4"`
+		Description string     `ewa:"desc"`
 	}
 
 	params := ModelToParameters(User{})
@@ -84,6 +85,7 @@ func TestModelToParameters(t *testing.T) {
 		fmt.Printf("Format: %s, ", param.Format)
 		fmt.Printf("Description: %s, ", param.Description)
 		fmt.Printf("Required: %t, ", param.Required)
-		fmt.Printf("AllowEmptyValue: %t\n", param.AllowEmptyValue)
+		fmt.Printf("AllowEmptyValue: %t,\n", param.AllowEmptyValue)
+		fmt.Printf("Items: %+v\n", param.Items)
 	}
 }

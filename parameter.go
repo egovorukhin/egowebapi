@@ -41,7 +41,7 @@ func NewPathParam(path string, desc ...string) *Parameter {
 		Type:     TypeString,
 	}
 	if desc != nil {
-		p.Description = desc[0]
+		p.SetDescription(desc[0])
 	}
 
 	return p
@@ -56,7 +56,7 @@ func NewBodyParam(required bool, schema *Schema, desc ...string) *Parameter {
 		Schema:   schema,
 	}
 	if desc != nil {
-		p.Description = desc[0]
+		p.SetDescription(desc[0])
 	}
 	return p
 }
@@ -70,7 +70,7 @@ func NewHeaderParam(name string, required bool, desc ...string) *Parameter {
 		Required: required,
 	}
 	if desc != nil {
-		p.Description = desc[0]
+		p.SetDescription(desc[0])
 	}
 	return p
 }
@@ -84,43 +84,24 @@ func NewQueryParam(name string, required bool, desc ...string) *Parameter {
 		Required: required,
 	}
 	if desc != nil {
-		p.Description = desc[0]
+		p.SetDescription(desc[0])
 	}
 	return p
 }
 
 // NewQueryArrayParam Инициализация параметра in: query с типом массив
 func NewQueryArrayParam(name, array string, required bool, desc ...string) *Parameter {
-	var (
-		enum        []interface{}
-		defaultItem string
-	)
-	for i, a := range strings.Split(array, ",") {
-		a = strings.Trim(a, " ")
-		if i == 0 {
-			defaultItem = a
-		}
-		enum = append(enum, a)
-	}
+
 	p := &Parameter{
 		In:               InQuery,
 		Name:             name,
 		Type:             TypeArray,
 		CollectionFormat: CollectionFormatMulti,
 		Required:         required,
-		Items: &Items{
-			CommonValidations: CommonValidations{
-				Enum: enum,
-			},
-			SimpleSchema: SimpleSchema{
-				Type: TypeString,
-				//CollectionFormat: CollectionFormatMulti,
-				Default: defaultItem,
-			},
-		},
 	}
+	p.SetItems(array)
 	if desc != nil {
-		p.Description = desc[0]
+		p.SetDescription(desc[0])
 	}
 	return p
 }
@@ -134,7 +115,7 @@ func NewFormDataParam(name, t string, required bool, desc ...string) *Parameter 
 		Type:     t,
 	}
 	if desc != nil {
-		p.Description = desc[0]
+		p.SetDescription(desc[0])
 	}
 	return p
 }
@@ -142,7 +123,7 @@ func NewFormDataParam(name, t string, required bool, desc ...string) *Parameter 
 func ModelToParameters(v interface{}) (p []*Parameter) {
 
 	if v == nil {
-		return nil
+		return
 	}
 
 	Type := reflect.TypeOf(v)
@@ -156,66 +137,67 @@ func ModelToParameters(v interface{}) (p []*Parameter) {
 			var param *Parameter
 			for _, tagValue := range strings.Split(tag, ";") {
 
-				names := strings.Split(tagValue, ":")
-				if (len(names) == 0 || len(names) < 2) || names[1] == "" {
+				inNames := strings.Split(tagValue, ":")
+				if (len(inNames) == 0 || len(inNames) < 2) || inNames[1] == "" {
 					continue
 				}
 				t, f := setTypeFormat(reflect.Indirect(reflect.ValueOf(v)).Field(i).Interface())
-				name := strings.ToLower(strings.Trim(names[0], " "))
-				switch name {
-				case InHeader:
-					param = &Parameter{
-						Type:   t,
-						Format: f,
-						In:     name,
-					}
-				case InPath:
-					param = &Parameter{
-						Type:     t,
-						Format:   f,
-						In:       name,
-						Required: true,
-					}
-				case InQuery:
-					param = &Parameter{
-						Type:   t,
-						Format: f,
-						In:     name,
-					}
-				default:
-					continue
-				}
+				inName := strings.ToLower(strings.Trim(inNames[0], " "))
+				switch inName {
+				case InPath, InHeader, InQuery:
 
-				for _, value := range strings.Split(names[1], ",") {
-					items := strings.Split(value, "=")
-					if len(items) == 0 {
-						continue
+					// Инициализация параметра
+					param = NewParameter(inName).SetName(strings.ToLower(field.Name)).SetType(t).SetFormat(f)
+					// Если параметр пути, то прописываем свойства *обязательно
+					if inName == InPath {
+						param.SetRequired(true)
 					}
-					item := strings.ToLower(strings.Trim(items[0], " "))
-					switch item {
-					case "required":
-						param.Required = true
-					case "empty":
-						param.AllowEmptyValue = true
+
+					// Значения
+					values := strings.Split(inNames[1], ",")
+
+					// Получаем значения и устанавливаем в параметры
+					for _, value := range values {
+						items := strings.Split(value, "=")
+						if len(items) == 0 {
+							continue
+						}
+						item := strings.ToLower(strings.Trim(items[0], " "))
+						switch item {
+						case "required":
+							param.Required = true
+						case "empty":
+							param.SetAllowEmptyValue(true)
+						default:
+							// Проверяем является значение форматом пути, если да, то добавляем в путь параметра
+							if len(item) > 0 && item[0] == '/' && inName == InPath {
+								param.Path = item
+								break
+							}
+						}
+						// Если нет значений после равно, то выходим
+						if len(items) < 2 {
+							continue
+						}
+						// Получаем значения после равно
+						switch item {
+						case "name":
+							param.SetName(items[1])
+						case "format":
+							param.SetFormat(items[1])
+						case "type":
+							param.SetType(items[1])
+						case "array":
+							if inName == InQuery {
+								param.SetItems(items[1])
+							}
+						}
 					}
-					if len(items) < 2 {
-						continue
-					}
-					switch item {
-					case "name":
-						param.Name = items[1]
-					case "format":
-						param.Format = items[1]
-					case "type":
-						param.Type = items[1]
-					case "desc":
-						param.Description = items[1]
-					default:
-						continue
+					// Добавляем параметры в список
+					if len(values) > 0 {
+						p = append(p, param)
 					}
 				}
-
-				p = append(p, param)
 			}
 		}
 	}
@@ -224,9 +206,9 @@ func ModelToParameters(v interface{}) (p []*Parameter) {
 }
 
 // NewParameter Инициализация параметра
-func NewParameter(name string) *Parameter {
+func NewParameter(in string) *Parameter {
 	return &Parameter{
-		Name: name,
+		In: in,
 	}
 }
 
@@ -236,9 +218,9 @@ func (p *Parameter) SetType(t string) *Parameter {
 	return p
 }
 
-// SetIn Установка типа параметра
-func (p *Parameter) SetIn(i string) *Parameter {
-	p.In = i
+// SetName Установка типа параметра
+func (p *Parameter) SetName(name string) *Parameter {
+	p.Name = name
 	return p
 }
 
@@ -275,5 +257,39 @@ func (p *Parameter) SetTypeFormat(t interface{}) *Parameter {
 // SetAllowEmptyValue Установка на отправку пустого параметра
 func (p *Parameter) SetAllowEmptyValue(allowEmptyValue bool) *Parameter {
 	p.AllowEmptyValue = allowEmptyValue
+	return p
+}
+
+// SetCollectionFormat Установка на отправку пустого параметра
+func (p *Parameter) SetCollectionFormat(format string) *Parameter {
+	p.CollectionFormat = format
+	return p
+}
+
+// SetItems Установка на отправку пустого параметра
+func (p *Parameter) SetItems(array string) *Parameter {
+
+	var (
+		enum        []interface{}
+		defaultItem string
+	)
+	for i, a := range strings.Split(array, "&") {
+		a = strings.Trim(a, " ")
+		if i == 0 {
+			defaultItem = a
+		}
+		enum = append(enum, a)
+	}
+	p.SetCollectionFormat(CollectionFormatMulti)
+	p.Items = &Items{
+		CommonValidations: CommonValidations{
+			Enum: enum,
+		},
+		SimpleSchema: SimpleSchema{
+			Type: TypeString,
+			//CollectionFormat: CollectionFormatMulti,
+			Default: defaultItem,
+		},
+	}
 	return p
 }

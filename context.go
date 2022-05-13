@@ -11,9 +11,9 @@ import (
 
 type Context struct {
 	Identity *security.Identity
-	View     *View
 	Swagger  Swagger
 	Session  *Session
+	//View     *View
 	IContext
 }
 
@@ -61,8 +61,4 @@ type IContext interface {
 
 func NewContext(c IContext) *Context {
 	return &Context{IContext: c}
-}
-
-func (c *Context) ViewRender(data interface{}) error {
-	return c.Render(c.View.Filename, data, c.View.Layout)
 }
