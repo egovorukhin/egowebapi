@@ -85,25 +85,21 @@ type Items struct {
 }
 
 // NewSchema Инициализация схемы для параметров
-func NewSchema(modelName string) *Schema {
+func NewSchema(modelName string, isArray bool) *Schema {
 	if len(modelName) == 0 {
 		return nil
 	}
+	if isArray {
+		return &Schema{
+			Type: TypeArray,
+			Items: &Items{
+				Ref: modelName,
+			},
+		}
+	}
+
 	return &Schema{
 		Ref: modelName,
-	}
-}
-
-// NewSchemaArray Инициализация схемы с массивом для параметров
-func NewSchemaArray(modelName string) *Schema {
-	if len(modelName) == 0 {
-		return nil
-	}
-	return &Schema{
-		Type: TypeArray,
-		Items: &Items{
-			Ref: modelName,
-		},
 	}
 }
 

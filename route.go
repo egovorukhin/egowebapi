@@ -35,8 +35,32 @@ const (
 	Off
 )
 
-// NewEmptyPathParam Инициализация пустого параметра пути маршрута
-func NewEmptyPathParam(summary string, desc ...string) *EmptyPathParam {
+// setResponse описываем варианты ответов для Swagger
+func (e *EmptyPathParam) setResponse(code int, modelName string, isArray bool, headers Headers, desc ...string) {
+	response := Response{
+		Headers: headers,
+		Schema:  NewSchema(modelName, isArray),
+	}
+	if desc != nil {
+		response.Description = desc[0]
+	}
+	e.Responses[strconv.Itoa(code)] = response
+}
+
+// SetResponse описываем варианты ответов для Swagger
+func (e *EmptyPathParam) SetResponse(code int, modelName string, headers Headers, desc ...string) *EmptyPathParam {
+	e.setResponse(code, modelName, false, headers, desc...)
+	return e
+}
+
+// SetResponseArray описываем варианты ответов для Swagger
+func (e *EmptyPathParam) SetResponseArray(code int, modelName string, headers Headers, desc ...string) *EmptyPathParam {
+	e.setResponse(code, modelName, true, headers, desc...)
+	return e
+}
+
+// SetEmptyParam указываем параметры маршрута
+func (r *Route) SetEmptyParam(summary string, desc ...string) *EmptyPathParam {
 	e := &EmptyPathParam{
 		Summary:   summary,
 		Responses: map[string]Response{},
@@ -44,26 +68,8 @@ func NewEmptyPathParam(summary string, desc ...string) *EmptyPathParam {
 	if desc != nil {
 		e.Description = desc[0]
 	}
-	return e
-}
-
-// SetResponse описываем варианты ответов для Swagger
-func (e *EmptyPathParam) SetResponse(code int, modelName string, headers Headers, desc ...string) *EmptyPathParam {
-	response := Response{
-		Schema:  NewSchema(modelName),
-		Headers: headers,
-	}
-	if desc != nil {
-		response.Description = desc[0]
-	}
-	e.Responses[strconv.Itoa(code)] = response
-	return e
-}
-
-// SetEmptyParam указываем параметры маршрута
-func (r *Route) SetEmptyParam(e *EmptyPathParam) *Route {
 	r.emptyPathParam = e
-	return r
+	return r.emptyPathParam
 }
 
 // SetParameters указываем параметры маршрута
@@ -106,10 +112,22 @@ func (r *Route) SetOperationID(id string) *Route {
 	return r
 }
 
-// SetDefaultResponse описываем варианты ответов для Swagger
-func (r *Route) SetDefaultResponse(modelName string, headers Headers, desc ...string) *Route {
+// setResponse описываем варианты ответов для Swagger
+func (r *Route) setResponse(code int, modelName string, isArray bool, headers Headers, desc ...string) {
 	response := Response{
-		Schema:  NewSchema(modelName),
+		Headers: headers,
+		Schema:  NewSchema(modelName, isArray),
+	}
+	if desc != nil {
+		response.Description = desc[0]
+	}
+	r.Responses[strconv.Itoa(code)] = response
+}
+
+// SetDefaultResponse описываем варианты ответов для Swagger
+func (r *Route) SetDefaultResponse(modelName string, isArray bool, headers Headers, desc ...string) *Route {
+	response := Response{
+		Schema:  NewSchema(modelName, isArray),
 		Headers: headers,
 	}
 	if desc != nil {
@@ -121,14 +139,13 @@ func (r *Route) SetDefaultResponse(modelName string, headers Headers, desc ...st
 
 // SetResponse описываем варианты ответов для Swagger
 func (r *Route) SetResponse(code int, modelName string, headers Headers, desc ...string) *Route {
-	response := Response{
-		Schema:  NewSchema(modelName),
-		Headers: headers,
-	}
-	if desc != nil {
-		response.Description = desc[0]
-	}
-	r.Responses[strconv.Itoa(code)] = response
+	r.setResponse(code, modelName, false, headers, desc...)
+	return r
+}
+
+// SetResponseArray описываем варианты ответов для Swagger
+func (r *Route) SetResponseArray(code int, modelName string, headers Headers, desc ...string) *Route {
+	r.setResponse(code, modelName, true, headers, desc...)
 	return r
 }
 
