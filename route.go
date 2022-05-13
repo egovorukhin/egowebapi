@@ -48,9 +48,9 @@ func NewEmptyPathParam(summary string, desc ...string) *EmptyPathParam {
 }
 
 // SetResponse описываем варианты ответов для Swagger
-func (e *EmptyPathParam) SetResponse(code int, schema *Schema, headers Headers, desc ...string) *EmptyPathParam {
+func (e *EmptyPathParam) SetResponse(code int, modelName string, headers Headers, desc ...string) *EmptyPathParam {
 	response := Response{
-		Schema:  schema,
+		Schema:  NewSchema(modelName),
 		Headers: headers,
 	}
 	if desc != nil {
@@ -107,9 +107,9 @@ func (r *Route) SetOperationID(id string) *Route {
 }
 
 // SetDefaultResponse описываем варианты ответов для Swagger
-func (r *Route) SetDefaultResponse(schema *Schema, headers Headers, desc ...string) *Route {
+func (r *Route) SetDefaultResponse(modelName string, headers Headers, desc ...string) *Route {
 	response := Response{
-		Schema:  schema,
+		Schema:  NewSchema(modelName),
 		Headers: headers,
 	}
 	if desc != nil {

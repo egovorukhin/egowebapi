@@ -13,7 +13,7 @@ type User struct{}
 func (User) Get(route *ewa.Route) {
 
 	route.SetSecurity(security.BasicAuth).
-		SetEmptyParam(ewa.NewEmptyPathParam("Get users").SetResponse(200, ewa.NewSchemaArray(models.ModelUser), nil, "Return array users")).
+		SetEmptyParam(ewa.NewEmptyPathParam("Get users").SetResponse(200, models.ModelUser, nil, "Return array users")).
 		SetParameters(ewa.NewPathParam("/{id}", "Id пользователя")).
 		InitParametersByModel(models.ModelUser).
 		SetSummary("Get user").
