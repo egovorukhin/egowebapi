@@ -13,7 +13,7 @@ import (
 
 const (
 	Name    = "EgoWebApi"
-	Version = "v0.2.24"
+	Version = "v0.2.26"
 )
 
 type Server struct {
@@ -71,7 +71,8 @@ func New(server IServer, config Config) *Server {
 			BasePath:            "/",
 			SecurityDefinitions: SecurityDefinitions{},
 			Paths:               Paths{},
-			Definitions:         map[string]*jsonschema.Schema{},
+			Definitions:         jsonschema.Definitions{},
+			models:              Models{},
 		},
 	}
 
@@ -189,7 +190,7 @@ func (s *Server) Stop() error {
 }
 
 // Устанавливаем глобальные настройки для маршрутов
-func (s *Server) newRoute(model *Model) *Route {
+func (s *Server) newRoute() *Route {
 
 	route := &Route{
 		Operation: Operation{
@@ -203,15 +204,7 @@ func (s *Server) newRoute(model *Model) *Route {
 				},
 			},
 		},
-		Model: model,
-	}
-	if model != nil {
-		if model.Parameter != nil {
-			s.Swagger.setDefinition(model.Parameter)
-		}
-		if model.Response != nil {
-			s.Swagger.setDefinition(model.Response)
-		}
+		models: s.Swagger.models,
 	}
 	if s.Config.Permission != nil {
 		route.isPermission = s.Config.Permission.AllRoutes
@@ -225,63 +218,63 @@ func (s *Server) newRoute(model *Model) *Route {
 
 // Обрабатываем метод GET
 func (s *Server) get(i IGet, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Get(route)
 	return s.add(consts.MethodGet, c, route)
 }
 
 // Обрабатываем метод POST
 func (s *Server) post(i IPost, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Post(route)
 	return s.add(consts.MethodPost, c, route)
 }
 
 // Обрабатываем метод PUT
 func (s *Server) put(i IPut, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Put(route)
 	return s.add(consts.MethodPut, c, route)
 }
 
 // Обрабатываем метод DELETE
 func (s *Server) delete(i IDelete, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Delete(route)
 	return s.add(consts.MethodDelete, c, route)
 }
 
 // Обрабатываем метод OPTIONS
 func (s *Server) options(i IOptions, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Options(route)
 	return s.add(consts.MethodOptions, c, route)
 }
 
 // Обрабатываем метод PATCH
 func (s *Server) patch(i IPatch, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Patch(route)
 	return s.add(consts.MethodPatch, c, route)
 }
 
 // Обрабатываем метод HEAD
 func (s *Server) head(i IHead, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Head(route)
 	return s.add(consts.MethodHead, c, route)
 }
 
 // Обрабатываем метод CONNECT
 func (s *Server) connect(i IConnect, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Connect(route)
 	return s.add(consts.MethodConnect, c, route)
 }
 
 // Обрабатываем метод TRACE
 func (s *Server) trace(i ITrace, c *Controller) error {
-	route := s.newRoute(c.Model)
+	route := s.newRoute()
 	i.Trace(route)
 	return s.add(consts.MethodTrace, c, route)
 }

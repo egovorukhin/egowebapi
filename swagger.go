@@ -23,6 +23,7 @@ type Swagger struct {
 	Tags                []Tag                  `json:"tags,omitempty"`
 	ExternalDocs        *ExternalDocs          `json:"externalDocs,omitempty"`
 	Definitions         jsonschema.Definitions `json:"definitions,omitempty"`
+	models              Models
 	//spec.Swagger
 }
 
@@ -56,18 +57,6 @@ type Paths map[string]PathItem
 
 type PathItem map[string]Operation
 
-/*type PathItem struct {
-	Get       *Operation
-	Post      *Operation
-	Put       *Operation
-	Delete    *Operation
-	Options   *Operation
-	Patch     *Operation
-	Head      *Operation
-	Trace     *Operation
-	Connect   *Operation
-}*/
-
 type ExternalDocs struct {
 	Description string `json:"description,omitempty"`
 	URL         string `json:"url,omitempty"`
@@ -77,15 +66,15 @@ type Security []map[string][]string
 
 type SecurityDefinitions map[string]security.Definition
 
+type Models map[string]interface{}
+
 const (
 	InPath     = "path"
 	InQuery    = "query"
 	InHeader   = "header"
 	InBody     = "body"
 	InFormData = "formData"
-)
 
-const (
 	TypeString  = "string"
 	TypeArray   = "array"
 	TypeFile    = "file"
@@ -110,7 +99,7 @@ func (s *Swagger) setDefinitions(models ...interface{}) *Swagger {
 	return s
 }
 
-// setDefinitions Преобразование моделей в формат JSON Schema
+// setDefinition Преобразование модели в формат JSON Schema
 func (s *Swagger) setDefinition(model interface{}) *Swagger {
 	schema := jsonschema.Reflect(model)
 	for key, value := range schema.Definitions {
@@ -133,7 +122,8 @@ func (s *Swagger) setPort(port string) *Swagger {
 
 // setRefDefinitions Проверка модели на существование
 func (s *Swagger) setRefDefinitions(ref string) (string, bool) {
-	if _, ok := s.Definitions[ref]; ok {
+	if model, ok := s.models[ref]; ok {
+		s.setDefinition(model)
 		return RefDefinitions + ref, ok
 	}
 	return ref, false
@@ -207,4 +197,18 @@ func (s *Swagger) compareBasePath(path string) (bool, int) {
 		return true, l
 	}
 	return false, l
+}
+
+// SetModel Добавить модель для определения параметров для swagger
+func (s *Swagger) SetModel(name string, model interface{}) *Swagger {
+	s.models[name] = model
+	return s
+}
+
+// SetModels Добавить модель для определения параметров для swagger
+func (s *Swagger) SetModels(models Models) *Swagger {
+	for key, model := range models {
+		s.SetModel(key, model)
+	}
+	return s
 }

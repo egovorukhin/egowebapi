@@ -7,3 +7,5 @@ type Response struct {
 	Message  string    `json:"message"`
 	Datetime time.Time `json:"datetime"`
 }
+
+const ModelResponse = "Response"

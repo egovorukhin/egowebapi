@@ -16,6 +16,8 @@ type User struct {
 type Users map[int]*User
 type UserArray []*User
 
+const ModelUser = "User"
+
 func GetUser(id int) *User {
 	for _, user := range users {
 		if user.Id == id {

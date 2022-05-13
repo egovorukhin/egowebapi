@@ -51,12 +51,7 @@ type Controller struct {
 	PathTree  []string
 	FileTree  []string
 	Tag       Tag
-	Model     *Model
-}
-
-type Model struct {
-	Parameter interface{}
-	Response  interface{}
+	Models    Models
 }
 
 // SetName Устанавливаем имя контроллера
@@ -160,15 +155,6 @@ func (c *Controller) initialize(basePath string) {
 	} else {
 		c.Path = path.Join(pkgPath, c.Name)
 	}
-}
-
-// SetModel Добавить модель для определения параметров для swagger
-func (c *Controller) SetModel(parameter, response interface{}) *Controller {
-	c.Model = &Model{
-		Parameter: parameter,
-		Response:  response,
-	}
-	return c
 }
 
 func insert(a []string, index int, value string) []string {

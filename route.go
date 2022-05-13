@@ -12,7 +12,7 @@ type Route struct {
 	emptyPathParam *EmptyPathParam
 	session        SessionTurn
 	isPermission   bool
-	Model          *Model
+	models         Models
 	Handler        Handler
 	Operation
 }
@@ -48,8 +48,15 @@ func NewEmptyPathParam(summary string, desc ...string) *EmptyPathParam {
 }
 
 // SetResponse описываем варианты ответов для Swagger
-func (e *EmptyPathParam) SetResponse(code int, resp Response) *EmptyPathParam {
-	e.Responses[strconv.Itoa(code)] = resp
+func (e *EmptyPathParam) SetResponse(code int, schema *Schema, headers Headers, desc ...string) *EmptyPathParam {
+	response := Response{
+		Schema:  schema,
+		Headers: headers,
+	}
+	if desc != nil {
+		response.Description = desc[0]
+	}
+	e.Responses[strconv.Itoa(code)] = response
 	return e
 }
 
@@ -68,25 +75,15 @@ func (r *Route) SetParameters(params ...*Parameter) *Route {
 }
 
 // InitParametersByModel Формирование параметров на основе модели
-func (r *Route) InitParametersByModel() *Route {
-	if r.Model != nil && r.Model.Parameter != nil {
-		r.SetParameters(ModelToParameters(r.Model.Parameter)...)
-	}
+func (r *Route) InitParametersByModel(name string) *Route {
+	r.SetParameters(ModelToParameters(r.Model(name))...)
 	return r
 }
 
-// ParameterModel Вернуть модель параметров
-func (r *Route) ParameterModel() interface{} {
-	if r.Model != nil && r.Model.Parameter != nil {
-		return r.Model.Parameter
-	}
-	return nil
-}
-
-// ResponseModel Вернуть модель для ответа
-func (r *Route) ResponseModel() interface{} {
-	if r.Model != nil && r.Model.Response != nil {
-		return r.Model.Response
+// Model Вернуть модель параметров
+func (r *Route) Model(name string) interface{} {
+	if model, ok := r.models[name]; ok {
+		return model
 	}
 	return nil
 }
@@ -110,14 +107,28 @@ func (r *Route) SetOperationID(id string) *Route {
 }
 
 // SetDefaultResponse описываем варианты ответов для Swagger
-func (r *Route) SetDefaultResponse(resp Response) *Route {
-	r.Responses["default"] = resp
+func (r *Route) SetDefaultResponse(schema *Schema, headers Headers, desc ...string) *Route {
+	response := Response{
+		Schema:  schema,
+		Headers: headers,
+	}
+	if desc != nil {
+		response.Description = desc[0]
+	}
+	r.Responses["default"] = response
 	return r
 }
 
 // SetResponse описываем варианты ответов для Swagger
-func (r *Route) SetResponse(code int, resp Response) *Route {
-	r.Responses[strconv.Itoa(code)] = resp
+func (r *Route) SetResponse(code int, modelName string, headers Headers, desc ...string) *Route {
+	response := Response{
+		Schema:  NewSchema(modelName),
+		Headers: headers,
+	}
+	if desc != nil {
+		response.Description = desc[0]
+	}
+	r.Responses[strconv.Itoa(code)] = response
 	return r
 }
 

@@ -1,7 +1,6 @@
 package egowebapi
 
 import (
-	"reflect"
 	"time"
 )
 
@@ -42,7 +41,7 @@ type Schema struct {
 type Response struct {
 	Description string                 `json:"description"`
 	Schema      *Schema                `json:"schema,omitempty"`
-	Headers     map[string]Header      `json:"headers,omitempty"`
+	Headers     Headers                `json:"headers,omitempty"`
 	Examples    map[string]interface{} `json:"examples,omitempty"`
 }
 
@@ -51,6 +50,8 @@ type Header struct {
 	CommonValidations
 	SimpleSchema
 }
+
+type Headers map[string]Header
 
 type CommonValidations struct {
 	Maximum          *float64      `json:"maximum,omitempty"`
@@ -84,39 +85,26 @@ type Items struct {
 }
 
 // NewSchema Инициализация схемы для параметров
-func NewSchema(i interface{}) *Schema {
-	if i == nil {
+func NewSchema(modelName string) *Schema {
+	if len(modelName) == 0 {
 		return nil
 	}
 	return &Schema{
-		Ref: RefDefinition(i),
+		Ref: modelName,
 	}
 }
 
 // NewSchemaArray Инициализация схемы с массивом для параметров
-func NewSchemaArray(i interface{}) *Schema {
-	if i == nil {
+func NewSchemaArray(modelName string) *Schema {
+	if len(modelName) == 0 {
 		return nil
 	}
 	return &Schema{
 		Type: TypeArray,
 		Items: &Items{
-			Ref: RefDefinition(i),
+			Ref: modelName,
 		},
 	}
-}
-
-// RefDefinition Получаем имя модели, чтобы затем сформировать ссылку
-func RefDefinition(i interface{}) string {
-
-	var t reflect.Type
-	value := reflect.ValueOf(i)
-	if value.Type().Kind() == reflect.Ptr {
-		t = reflect.Indirect(value).Type()
-	} else {
-		t = value.Type()
-	}
-	return t.Name()
 }
 
 // getPathParams Извлекаем пути из параметров

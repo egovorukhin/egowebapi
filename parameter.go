@@ -48,12 +48,12 @@ func NewPathParam(path string, desc ...string) *Parameter {
 }
 
 // NewBodyParam Инициализация параметра in: body
-func NewBodyParam(required bool, schema *Schema, desc ...string) *Parameter {
+func NewBodyParam(required bool, modelName string, desc ...string) *Parameter {
 	p := &Parameter{
 		In:       InBody,
 		Name:     InBody,
 		Required: required,
-		Schema:   schema,
+		Schema:   NewSchema(modelName),
 	}
 	if desc != nil {
 		p.SetDescription(desc[0])
