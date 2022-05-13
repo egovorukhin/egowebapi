@@ -264,15 +264,14 @@ func (r *Route) getHandler(config Config, swagger Swagger) Handler {
 
 		// Проверка на ошибку авторизации и отправку кода 401
 		if err != nil {
-			if isSecurity {
-				if config.Authorization.Unauthorized != nil && config.Authorization.Unauthorized(err) {
-					return c.SendString(consts.StatusUnauthorized, err.Error())
-				}
-				return c.SendStatus(consts.StatusUnauthorized)
-			} else if r.session != None {
+			if r.session != None {
 				// Если cookie не существует, то перенаправляем запрос условно на "/login"
 				return c.Redirect(config.Session.RedirectPath, config.Session.RedirectStatus)
 			}
+			if config.Authorization.Unauthorized != nil && config.Authorization.Unauthorized(err) {
+				return c.SendString(consts.StatusUnauthorized, err.Error())
+			}
+			return c.SendStatus(consts.StatusUnauthorized)
 		}
 
 		// Доступ к маршрутам

@@ -25,6 +25,12 @@ func main() {
 		return false
 	}
 
+	contextHandler := func(handler ewa.Handler) interface{} {
+		return func(ctx *fiber.Ctx) error {
+			return handler(ewa.NewContext(&f.Context{Ctx: ctx}))
+		}
+	}
+
 	// Fiber
 	app := fiber.New()
 	// Cors
@@ -43,6 +49,7 @@ func main() {
 				Handler: basicAuthHandler,
 			},
 		},
+		ContextHandler: contextHandler,
 	}
 
 	info := ewa.Info{
