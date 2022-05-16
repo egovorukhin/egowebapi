@@ -126,16 +126,20 @@ func ModelToParameters(v interface{}) (p []*Parameter) {
 		return
 	}
 
-	Type := reflect.TypeOf(v)
-	if Type.Kind() == reflect.Ptr {
-		Type = Type.Elem()
+	t := reflect.TypeOf(v)
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
-	if Type.Kind() != reflect.Struct {
+	if t.Kind() != reflect.Struct {
 		return nil
 	}
 
-	for i := 0; i < Type.NumField(); i++ {
-		field := Type.Field(i)
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Anonymous {
+			p = append(p, ModelToParameters(reflect.ValueOf(v).Field(i).Interface())...)
+			continue
+		}
 		if tag, ok := field.Tag.Lookup(tagEWA); ok {
 			var param *Parameter
 			for _, tagValue := range strings.Split(tag, ";") {
@@ -144,13 +148,13 @@ func ModelToParameters(v interface{}) (p []*Parameter) {
 				if (len(inNames) == 0 || len(inNames) < 2) || inNames[1] == "" {
 					continue
 				}
-				t, f := setTypeFormat(reflect.Indirect(reflect.ValueOf(v)).Field(i).Interface())
+				tp, fm := setTypeFormat(reflect.ValueOf(v).Field(i).Interface())
 				inName := strings.ToLower(strings.Trim(inNames[0], " "))
 				switch inName {
 				case InPath, InHeader, InQuery:
 
 					// Инициализация параметра
-					param = NewParameter(inName).SetName(strings.ToLower(field.Name)).SetType(t).SetFormat(f)
+					param = NewParameter(inName).SetName(strings.ToLower(field.Name)).SetType(tp).SetFormat(fm)
 					// Если параметр пути, то прописываем свойства *обязательно
 					if inName == InPath {
 						param.SetRequired(true)

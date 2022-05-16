@@ -12,11 +12,16 @@ type User struct {
 	Firstname  string     `json:"firstname" jsonschema:"description=Firstname" ewa:"query:desc:Имя пользователя"`
 	Lastname   string     `json:"lastname" jsonschema:"description=Lastname" ewa:"query:desc:Фамилия пользователя,array=User1&User2&User3"`
 	Department Department `json:"department"`
+	Extension
 }
 
 type Department struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
+}
+
+type Extension struct {
+	Middlename string `json:"middlename" ewa:"query:name=middle_name"`
 }
 
 type Users map[int]*User
