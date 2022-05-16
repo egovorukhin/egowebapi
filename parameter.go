@@ -127,6 +127,9 @@ func ModelToParameters(v interface{}) (p []*Parameter) {
 	}
 
 	Type := reflect.TypeOf(v)
+	if Type.Kind() == reflect.Ptr {
+		Type = Type.Elem()
+	}
 	if Type.Kind() != reflect.Struct {
 		return nil
 	}

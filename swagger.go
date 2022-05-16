@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/egovorukhin/egowebapi/security"
 	"github.com/mustan989/jsonschema"
+	"reflect"
 )
 
 type Swagger struct {
@@ -87,25 +88,55 @@ const (
 	RefDefinitions = "#/definitions/"
 )
 
+// JSON Преобразование в структуру json
 func (s *Swagger) JSON() ([]byte, error) {
 	return json.Marshal(s)
 }
 
-// setDefinitions Преобразование моделей в формат JSON Schema
-func (s *Swagger) setDefinitions(models ...interface{}) *Swagger {
-	for _, model := range models {
-		s.setDefinition(model)
-	}
-	return s
-}
-
 // setDefinition Преобразование модели в формат JSON Schema
-func (s *Swagger) setDefinition(model interface{}) *Swagger {
-	schema := jsonschema.Reflect(model)
+func (s *Swagger) setDefinition(model interface{}, name string) *Swagger {
+	r := jsonschema.Reflector{}
+	if len(name) > 0 {
+		r.Namer = func(r reflect.Type) string {
+			if r.Kind() == reflect.Ptr {
+				r = r.Elem()
+			}
+			if r.Kind() == reflect.Struct && s.models.contains(r) {
+				return name
+			}
+			return r.Name()
+		}
+	}
+	schema := r.Reflect(model)
 	for key, value := range schema.Definitions {
 		s.Definitions[key] = value
 	}
 	return s
+}
+
+// contains Проверка на соответствие модели
+func (m Models) contains(mt reflect.Type) bool {
+	for _, value := range m {
+		vt := reflect.TypeOf(value)
+		if vt.Kind() == reflect.Ptr {
+			vt = vt.Elem()
+		}
+		if vt.Kind() == reflect.Struct {
+			if vt == mt {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// setRefDefinitions Проверка модели на существование
+func (s *Swagger) setRefDefinitions(ref string) (string, bool) {
+	if model, ok := s.models[ref]; ok {
+		s.setDefinition(model, ref)
+		return RefDefinitions + ref, ok
+	}
+	return ref, false
 }
 
 // SetSchemes устанавливаем схему
@@ -118,15 +149,6 @@ func (s *Swagger) SetSchemes(scheme ...string) *Swagger {
 func (s *Swagger) setPort(port string) *Swagger {
 	s.Host += port
 	return s
-}
-
-// setRefDefinitions Проверка модели на существование
-func (s *Swagger) setRefDefinitions(ref string) (string, bool) {
-	if model, ok := s.models[ref]; ok {
-		s.setDefinition(model)
-		return RefDefinitions + ref, ok
-	}
-	return ref, false
 }
 
 // Устанавливаем путь с операциями
@@ -205,10 +227,27 @@ func (s *Swagger) SetModel(name string, model interface{}) *Swagger {
 	return s
 }
 
+// SetModelByStruct Добавить модель для определения параметров для swagger
+func (s *Swagger) SetModelByStruct(model interface{}) *Swagger {
+	t := reflect.TypeOf(model)
+	if t.Kind() == reflect.Struct {
+		s.models[t.Name()] = model
+	}
+	return s
+}
+
 // SetModels Добавить модель для определения параметров для swagger
 func (s *Swagger) SetModels(models Models) *Swagger {
 	for key, model := range models {
 		s.SetModel(key, model)
+	}
+	return s
+}
+
+// SetModelsByStruct Добавить модель для определения параметров для swagger
+func (s *Swagger) SetModelsByStruct(models ...interface{}) *Swagger {
+	for _, model := range models {
+		s.SetModelByStruct(model)
 	}
 	return s
 }
