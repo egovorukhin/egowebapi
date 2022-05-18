@@ -6,7 +6,6 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/gofiber/fiber/v2 v2.33.0
 	github.com/gofiber/template v1.6.27
-	github.com/invopop/jsonschema v0.4.0
 	github.com/labstack/echo/v4 v4.7.2
 	github.com/mustan989/jsonschema v0.4.1
 )
