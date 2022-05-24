@@ -206,12 +206,12 @@ func (r *Route) SetHandler(handler Handler) *Route {
 }
 
 // getHandler возвращаем обработчик основанный на параметрах конфигурации маршрута
-func (r *Route) getHandler(config Config, swagger Swagger) Handler {
+func (r *Route) getHandler(config Config, swagger *Swagger) Handler {
 
 	return func(c *Context) error {
 
 		//c.View = view
-		c.Swagger = swagger
+		c.Swagger = *swagger
 
 		var (
 			err        error

@@ -13,7 +13,7 @@ import (
 
 const (
 	Name    = "EgoWebApi"
-	Version = "v0.2.34"
+	Version = "v0.2.35"
 )
 
 type Server struct {
@@ -21,7 +21,7 @@ type Server struct {
 	IsStarted   bool
 	WebServer   IServer
 	Controllers []*Controller
-	Swagger     Swagger
+	Swagger     *Swagger
 }
 
 type IServer interface {
@@ -65,7 +65,7 @@ func New(server IServer, config Config) *Server {
 	s := &Server{
 		Config:    config,
 		WebServer: server,
-		Swagger: Swagger{
+		Swagger: &Swagger{
 			Swagger:             "2.0",
 			Host:                fmt.Sprintf("localhost:%d", config.Port),
 			BasePath:            "/",
@@ -175,10 +175,8 @@ func (s *Server) Start() (err error) {
 		// Запускаем слушатель с TLS настройкой
 		return s.WebServer.StartTLS(addr, cert, key)
 	}
-
 	// Добавляем схему в Swagger
 	s.Swagger.SetSchemes("http")
-
 	// Запуск слушателя веб сервера
 	return s.WebServer.Start(addr)
 }

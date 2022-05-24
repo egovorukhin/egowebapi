@@ -78,7 +78,7 @@ func main() {
 	ws.Register(new(controllers.Api)).NotShow()
 
 	// Описываем swagger
-	ws.Swagger.SetInfo(fmt.Sprintf("10.28.0.73:%d", cfg.Port), &info, nil).SetBasePath("/api")
+	ws.Swagger.SetInfo("10.28.0.73", &info, nil).SetBasePath("/api")
 	ws.Swagger.SetModels(ewa.Models{
 		models.ModelUser:     models.User{},
 		models.ModelResponse: models.Response{},
