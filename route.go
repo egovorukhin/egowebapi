@@ -18,9 +18,9 @@ type Route struct {
 }
 
 type EmptyPathParam struct {
-	Summary     string              `json:"summary,omitempty"`
-	Description string              `json:"description,omitempty"`
-	Responses   map[string]Response `json:"responses,omitempty"`
+	Summary     string               `json:"summary,omitempty"`
+	Description string               `json:"description,omitempty"`
+	Responses   map[string]*Response `json:"responses,omitempty"`
 }
 
 // Map тип список
@@ -37,7 +37,7 @@ const (
 
 // setResponse описываем варианты ответов для Swagger
 func (e *EmptyPathParam) setResponse(code int, modelName string, isArray bool, headers Headers, desc ...string) {
-	response := Response{
+	response := &Response{
 		Headers: headers,
 		Schema:  NewSchema(modelName, isArray),
 	}
@@ -63,7 +63,7 @@ func (e *EmptyPathParam) SetResponseArray(code int, modelName string, headers He
 func (r *Route) SetEmptyParam(summary string, desc ...string) *EmptyPathParam {
 	e := &EmptyPathParam{
 		Summary:   summary,
-		Responses: map[string]Response{},
+		Responses: map[string]*Response{},
 	}
 	if desc != nil {
 		e.Description = desc[0]
@@ -114,7 +114,7 @@ func (r *Route) SetOperationID(id string) *Route {
 
 // setResponse описываем варианты ответов для Swagger
 func (r *Route) setResponse(code int, modelName string, isArray bool, headers Headers, desc ...string) {
-	response := Response{
+	response := &Response{
 		Headers: headers,
 		Schema:  NewSchema(modelName, isArray),
 	}
@@ -126,7 +126,7 @@ func (r *Route) setResponse(code int, modelName string, isArray bool, headers He
 
 // SetDefaultResponse описываем варианты ответов для Swagger
 func (r *Route) SetDefaultResponse(modelName string, isArray bool, headers Headers, desc ...string) *Route {
-	response := Response{
+	response := &Response{
 		Schema:  NewSchema(modelName, isArray),
 		Headers: headers,
 	}

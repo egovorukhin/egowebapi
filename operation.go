@@ -5,18 +5,18 @@ import (
 )
 
 type Operation struct {
-	Description  string              `json:"description,omitempty"`
-	Consumes     []string            `json:"consumes,omitempty"`
-	Produces     []string            `json:"produces,omitempty"`
-	Schemes      []string            `json:"schemes,omitempty"`
-	Tags         []string            `json:"tags,omitempty"`
-	Summary      string              `json:"summary,omitempty"`
-	ExternalDocs *ExternalDocs       `json:"externalDocs,omitempty"`
-	ID           string              `json:"operationId,omitempty"`
-	Deprecated   bool                `json:"deprecated,omitempty"`
-	Security     Security            `json:"security,omitempty"`
-	Parameters   []*Parameter        `json:"parameters,omitempty"`
-	Responses    map[string]Response `json:"responses,omitempty"`
+	Description  string               `json:"description,omitempty"`
+	Consumes     []string             `json:"consumes,omitempty"`
+	Produces     []string             `json:"produces,omitempty"`
+	Schemes      []string             `json:"schemes,omitempty"`
+	Tags         []string             `json:"tags,omitempty"`
+	Summary      string               `json:"summary,omitempty"`
+	ExternalDocs *ExternalDocs        `json:"externalDocs,omitempty"`
+	ID           string               `json:"operationId,omitempty"`
+	Deprecated   bool                 `json:"deprecated,omitempty"`
+	Security     Security             `json:"security,omitempty"`
+	Parameters   []*Parameter         `json:"parameters,omitempty"`
+	Responses    map[string]*Response `json:"responses,omitempty"`
 }
 
 type Schema struct {

@@ -13,7 +13,7 @@ import (
 
 const (
 	Name    = "EgoWebApi"
-	Version = "v0.2.30"
+	Version = "v0.2.33"
 )
 
 type Server struct {
@@ -198,7 +198,7 @@ func (s *Server) newRoute() *Route {
 				consts.MIMEApplicationJSON,
 				consts.MIMEApplicationXML,
 			},
-			Responses: map[string]Response{
+			Responses: map[string]*Response{
 				"default": {
 					Description: "successful operation",
 				},
@@ -327,7 +327,7 @@ func (s *Server) add(method string, c *Controller, route *Route) error {
 			operation := route.Operation
 			// Если пустой путь, то применяем некоторые настройки из основного
 			if param == "" && route.emptyPathParam != nil {
-				operation.Responses = make(map[string]Response)
+				operation.Responses = make(map[string]*Response)
 				for key, value := range route.Responses {
 					operation.Responses[key] = value
 				}
