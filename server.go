@@ -13,7 +13,7 @@ import (
 
 const (
 	Name    = "EgoWebApi"
-	Version = "v0.2.33"
+	Version = "v0.2.34"
 )
 
 type Server struct {
@@ -289,7 +289,7 @@ func (s *Server) add(method string, c *Controller, route *Route) error {
 
 	pathParams := route.Operation.getPathParams()
 	params := []string{pathParams}
-	if pathParams == "" || route.emptyPathParam != nil {
+	if route.emptyPathParam != nil && pathParams != "" {
 		params = append(params, "")
 	}
 

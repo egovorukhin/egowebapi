@@ -160,17 +160,24 @@ func (s *Swagger) setPath(path, method string, operation Operation) *Swagger {
 			continue
 		}
 		// Пытаемся найти модель в определениях
-		response.Schema = s.setSchemaRef(response.Schema)
+		if !s.setSchemaRef(response.Schema) {
+			response.Schema = nil
+		}
 	}
 
 	// Настраиваем ссылку на модель в параметрах
-	for _, param := range operation.Parameters {
+	for i, param := range operation.Parameters {
+		if param == nil {
+			continue
+		}
 		switch param.In {
 		case InBody:
 			if param.Schema == nil {
 				break
 			}
-			param.Schema = s.setSchemaRef(param.Schema)
+			if !s.setSchemaRef(param.Schema) {
+				operation.Parameters = append(operation.Parameters[:i], operation.Parameters[i+1:]...)
+			}
 		}
 	}
 
@@ -184,20 +191,14 @@ func (s *Swagger) setPath(path, method string, operation Operation) *Swagger {
 	return s
 }
 
-func (s *Swagger) setSchemaRef(schema *Schema) *Schema {
-	var exists bool
+func (s *Swagger) setSchemaRef(schema *Schema) (exists bool) {
 	schema.Ref, exists = s.setRefDefinitions(schema.Ref)
 	if !exists {
 		if schema.Items != nil {
 			schema.Items.Ref, exists = s.setRefDefinitions(schema.Items.Ref)
-			if !exists {
-				schema.Items = nil
-			}
-			return schema
 		}
-		return nil
 	}
-	return schema
+	return exists
 }
 
 // setSecurityDefinition Устанавливаем необходимые поля для определения авторизации
