@@ -80,7 +80,7 @@ func main() {
 	// Описываем swagger
 	ws.Swagger.SetInfo(fmt.Sprintf("10.28.0.73:%d", cfg.Port), &info, nil).SetBasePath("/api")
 	ws.Swagger.SetModels(ewa.Models{
-		models.ModelUser:     models.User{},
+		//models.ModelUser:     models.User{},
 		models.ModelResponse: models.Response{},
 	})
 

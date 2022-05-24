@@ -136,7 +136,7 @@ func (s *Swagger) setRefDefinitions(ref string) (string, bool) {
 		s.setDefinition(model, ref)
 		return RefDefinitions + ref, ok
 	}
-	return ref, false
+	return "", false
 }
 
 // SetSchemes устанавливаем схему
