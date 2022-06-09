@@ -138,18 +138,18 @@ func (c *Controller) initialize(basePath string) {
 
 	// Формирование имени для тэга контроллера
 	var p string
-	name := c.Name
+	//name := c.Name
 	if pkgPath != "" && pkgPath != "/" && pkgPath[:len(basePath)] == basePath {
 		index := len(pkgPath)
 		loc := regexp.MustCompile(`{\w+}`).FindStringIndex(pkgPath)
 		if loc != nil {
 			index = loc[1]
-			name = ""
+			//name = ""
 		}
 		p = strings.ToLower(pkgPath[len(basePath):index])
 	}
 
-	c.Tag.Name = path.Join(p, name)
+	c.Tag.Name = path.Join(p, c.Name)
 	if c.Path != "" {
 		c.Path = pkgPath
 	} else {
